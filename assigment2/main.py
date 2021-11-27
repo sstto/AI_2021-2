@@ -1,8 +1,8 @@
 from world import *
 
-user = User(move='v1')
+user = User(move='v3')
 
-level = 1
+level = 0
 world = World(user=user, level=level)
 
 # train
@@ -15,7 +15,7 @@ for episode in range(TOTAL_EPISODE):
             break
     print('EPI : %d / %d' % (episode + 1, TOTAL_EPISODE), end='\r', flush=True)
     # test
-    if (episode + 1) % TEST_STEP:
+    if (episode + 1) % TEST_STEP == 0:
         world.reset()
         while True:
             done = world.move(test=True)

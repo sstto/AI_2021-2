@@ -34,14 +34,19 @@ class User:
         return random.choice(cand_pos)
 
     def get_legal_actions(self, state):
+        y, x = self.y, self.x
+        for i in range(len(state)):
+            for j in range(len(state[0])):
+                if state[i][j] in [USER, PUSER]:
+                    y, x = i, j
         actions = []
-        if state[self.y - 1][self.x] != WALL:
+        if state[y - 1][x] != WALL:
             actions.append(0)
-        if state[self.y][self.x - 1] != WALL:
+        if state[y][x - 1] != WALL:
             actions.append(1)
-        if state[self.y][self.x + 1] != WALL:
+        if state[y][x + 1] != WALL:
             actions.append(2)
-        if state[self.y + 1][self.x] != WALL:
+        if state[y + 1][x] != WALL:
             actions.append(3)
         return actions
 
@@ -106,36 +111,41 @@ class User:
         return next_pos
 
     def get_closest_item(self, state, y, x):
-        if state[y][x] != BLANK:
+        if state[y][x] not in [BLANK, ITEM, POWER]:
             return 0.0
-        q = deque([(y, x, 0)])
+        q = deque([(y, x, 1)])
         visit = set()
         while len(q) > 0:
             y, x, size = q.popleft()
-            if state[y][x] == ITEM:
+            if state[y][x] in [ITEM, POWER]:
                 return size
             if (y, x) in visit:
                 continue
             visit.add((y, x))
-            if state[y - 1][x] == BLANK:
+            if state[y - 1][x] in [BLANK, ITEM, POWER]:
                 q.append((y - 1, x, size + 1))
-            elif state[y][x - 1] == BLANK:
+            elif state[y][x - 1] in [BLANK, ITEM, POWER]:
                 q.append((y, x - 1, size + 1))
-            elif state[y][x + 1] == BLANK:
+            elif state[y][x + 1] in [BLANK, ITEM, POWER]:
                 q.append((y, x + 1, size + 1))
-            elif state[y + 1][x] == BLANK:
+            elif state[y + 1][x] in [BLANK, ITEM, POWER]:
                 q.append((y + 1, x, size + 1))
         return 0.0
 
     def get_features(self, state, action):
+        y, x = self.y, self.x
+        for i in range(len(state)):
+            for j in range(len(state[0])):
+                if state[i][j] in [USER, PUSER]:
+                    y, x = i, j
         if action == 0:
-            next_y, next_x = self.y - 1, self.x
+            next_y, next_x = y - 1, x
         elif action == 1:
-            next_y, next_x = self.y, self.x - 1
+            next_y, next_x = y, x - 1
         elif action == 2:
-            next_y, next_x = self.y, self.x + 1
+            next_y, next_x = y, x + 1
         else:
-            next_y, next_x = self.y + 1, self.x
+            next_y, next_x = y + 1, x
 
         features = {'bias': 1.0}
         features['next-ghost'] = 0.0
@@ -150,9 +160,9 @@ class User:
         if next_y < len(state) - 1 and state[next_y + 1][next_x] == GHOST:
             features['next-ghost'] += 1.0
         features['next-eat'] = 0.0
-        if state[next_y][next_x] == ITEM:
+        if state[next_y][next_x] in [ITEM, POWER]:
             features['next-eat'] = 1.0
-        features['closest-item'] = self.get_closest_item(state, next_y, next_x) / (len(state) * len(state[0]))
+        features['closest-item'] = self.get_closest_item(state, next_y, next_x)
 
         return features
 

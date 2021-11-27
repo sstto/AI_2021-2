@@ -50,7 +50,7 @@ class Ghost:
             if (y, x) in visit:
                 continue
             visit.add((y, x))
-            if state[y][x] == USER:
+            if state[y][x] in [USER, PUSER]:
                 return size
             if state[y - 1][x] != WALL:
                 q.append((y - 1, x, size + 1))

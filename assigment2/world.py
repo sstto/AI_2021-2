@@ -99,6 +99,10 @@ class World:
             self.board[1][16] = GHOST
             self.ghost.append(Ghost(13, 13))
             self.board[13][13] = GHOST
+
+            # create power
+            self.board[9][1] = POWER
+            self.board[9][19] = POWER
         
         elif self.level == 3:
             self.max_y = 19
@@ -136,6 +140,9 @@ class World:
             self.board[1][1] = GHOST
             self.ghost.append(Ghost(1, 19))
             self.board[1][19] = GHOST
+
+            # create power
+            self.board[9][1] = POWER
         
         elif self.level == 4:
             self.max_y = 19
@@ -174,6 +181,9 @@ class World:
             self.ghost.append(Ghost(17, 19))
             self.board[17][19] = GHOST
 
+            # create power
+            self.board[9][19] = POWER
+
         # set scores of each cell
         self.score = []
         for y in range(self.max_y):
@@ -196,7 +206,7 @@ class World:
                     ch = self.board[y][x]
                 print(ch, end='')
             print()
-        print('| Score : %d | Time : %d |' % (self.total_score, self.total_time))
+        print('| Score : %d | Time : %d | Ghost : %d |' % (self.total_score, self.total_time, len(self.ghost)))
 
     def move(self, test=False):
         before_board = copy.deepcopy(self.board)
@@ -249,11 +259,14 @@ class World:
                 self.total_score += SCORE_CATCH
                 self.remove_ghost(next_y, next_x)
             else:
+                self.board[self.user.y][self.user.x] = BLANK
+                self.user.y = next_y
+                self.user.x = next_x
                 return True
         self.total_score += self.score[next_y][next_x] + SCORE_ACTION
         self.score[next_y][next_x] = 0
         self.board[self.user.y][self.user.x] = BLANK
-        self.board[next_y][next_x] = USER
+        self.board[next_y][next_x] = PUSER if self.powered > 0 else USER
         self.user.y = next_y
         self.user.x = next_x
         return False
@@ -262,10 +275,12 @@ class World:
         dead = []
         for i in range(len(self.ghost)):
             next_y, next_x = self.ghost[i].next_pos(self.board)
-            if self.board[next_y][next_x] == USER:
+            if self.board[next_y][next_x] in [USER, PUSER]:
                 if self.powered > 0:
                     dead.append(i)
                     self.total_score += SCORE_CATCH
+                    self.board[self.ghost[i].y][self.ghost[i].x] = BLANK
+                    continue
                 else:
                     return True
             self.board[self.ghost[i].y][self.ghost[i].x] = BLANK
@@ -285,7 +300,7 @@ class World:
             temp.append(self.ghost[i])
         self.ghost = temp
         return False
-    
+
     def remove_ghost(self, y, x):
         dead = []
         for i in range(len(self.ghost)):
